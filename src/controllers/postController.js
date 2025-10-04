@@ -14,15 +14,34 @@ exports.createPost = async (req, res) => {
   }
 };
 
-// 获取所有文章
+// // 获取所有文章
+// exports.getPosts = async (req, res) => {
+//   try {
+//     const [rows] = await pool.query("SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC");
+//     res.json(rows);
+//   } catch (error) {
+//     res.status(500).json({ message: "服务器错误" });
+//   }
+// };
+
+
+// 获取所有文章 实现分页搜索功能
 exports.getPosts = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC");
+    const { page = 1, limit = 10, keyword = "" } = req.query;
+    const offset = (page - 1) * limit;
+
+    const [rows] = await pool.query(
+      "SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id WHERE p.title LIKE ? ORDER BY p.created_at DESC LIMIT ? OFFSET ?",
+      [`%${keyword}%`, parseInt(limit), parseInt(offset)]
+    );
+
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: "服务器错误" });
   }
 };
+
 
 // 获取单篇文章
 exports.getPostById = async (req, res) => {
